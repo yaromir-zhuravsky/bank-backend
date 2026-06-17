@@ -22,7 +22,7 @@ CREATE TABLE public.accounts (
     id bigint NOT NULL,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
-    user_id bigint NOT NULL,
+    customer_id bigint CONSTRAINT accounts_user_id_not_null NOT NULL,
     balance bigint DEFAULT 0 NOT NULL,
     number character varying NOT NULL,
     currency character varying NOT NULL,
@@ -47,6 +47,37 @@ CREATE SEQUENCE public.accounts_id_seq
 --
 
 ALTER SEQUENCE public.accounts_id_seq OWNED BY public.accounts.id;
+
+
+--
+-- Name: admins; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.admins (
+    id bigint NOT NULL,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL,
+    user_id bigint
+);
+
+
+--
+-- Name: admins_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.admins_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: admins_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.admins_id_seq OWNED BY public.admins.id;
 
 
 --
@@ -91,6 +122,39 @@ CREATE SEQUENCE public.currencies_id_seq
 --
 
 ALTER SEQUENCE public.currencies_id_seq OWNED BY public.currencies.id;
+
+
+--
+-- Name: customers; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.customers (
+    id bigint CONSTRAINT users_id_not_null NOT NULL,
+    created_at timestamp(6) without time zone CONSTRAINT users_created_at_not_null NOT NULL,
+    updated_at timestamp(6) without time zone CONSTRAINT users_updated_at_not_null NOT NULL,
+    firstname character varying CONSTRAINT users_firstname_not_null NOT NULL,
+    lastname character varying CONSTRAINT users_lastname_not_null NOT NULL,
+    user_id bigint NOT NULL
+);
+
+
+--
+-- Name: customers_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.customers_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: customers_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.customers_id_seq OWNED BY public.customers.id;
 
 
 --
@@ -170,11 +234,9 @@ ALTER SEQUENCE public.transactions_id_seq OWNED BY public.transactions.id;
 --
 
 CREATE TABLE public.users (
-    id bigint NOT NULL,
-    created_at timestamp(6) without time zone NOT NULL,
-    updated_at timestamp(6) without time zone NOT NULL,
-    firstname character varying NOT NULL,
-    lastname character varying NOT NULL
+    id bigint CONSTRAINT users_id_not_null1 NOT NULL,
+    created_at timestamp(6) without time zone CONSTRAINT users_created_at_not_null1 NOT NULL,
+    updated_at timestamp(6) without time zone CONSTRAINT users_updated_at_not_null1 NOT NULL
 );
 
 
@@ -205,10 +267,24 @@ ALTER TABLE ONLY public.accounts ALTER COLUMN id SET DEFAULT nextval('public.acc
 
 
 --
+-- Name: admins id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.admins ALTER COLUMN id SET DEFAULT nextval('public.admins_id_seq'::regclass);
+
+
+--
 -- Name: currencies id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.currencies ALTER COLUMN id SET DEFAULT nextval('public.currencies_id_seq'::regclass);
+
+
+--
+-- Name: customers id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.customers ALTER COLUMN id SET DEFAULT nextval('public.customers_id_seq'::regclass);
 
 
 --
@@ -241,6 +317,14 @@ ALTER TABLE ONLY public.accounts
 
 
 --
+-- Name: admins admins_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.admins
+    ADD CONSTRAINT admins_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: ar_internal_metadata ar_internal_metadata_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -254,6 +338,14 @@ ALTER TABLE ONLY public.ar_internal_metadata
 
 ALTER TABLE ONLY public.currencies
     ADD CONSTRAINT currencies_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: customers customers_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.customers
+    ADD CONSTRAINT customers_pkey PRIMARY KEY (id);
 
 
 --
@@ -296,10 +388,24 @@ CREATE UNIQUE INDEX index_accounts_on_number ON public.accounts USING btree (num
 
 
 --
+-- Name: index_admins_on_user_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_admins_on_user_id ON public.admins USING btree (user_id);
+
+
+--
 -- Name: index_currencies_on_currency; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE UNIQUE INDEX index_currencies_on_currency ON public.currencies USING btree (currency);
+
+
+--
+-- Name: index_customers_on_user_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_customers_on_user_id ON public.customers USING btree (user_id);
 
 
 --
@@ -308,6 +414,14 @@ CREATE UNIQUE INDEX index_currencies_on_currency ON public.currencies USING btre
 
 ALTER TABLE ONLY public.transactions
     ADD CONSTRAINT fk_rails_01f020e267 FOREIGN KEY (account_id) REFERENCES public.accounts(id);
+
+
+--
+-- Name: admins fk_rails_378b9734e4; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.admins
+    ADD CONSTRAINT fk_rails_378b9734e4 FOREIGN KEY (user_id) REFERENCES public.users(id);
 
 
 --
@@ -327,11 +441,19 @@ ALTER TABLE ONLY public.transactions
 
 
 --
+-- Name: customers fk_rails_9917eeaf5d; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.customers
+    ADD CONSTRAINT fk_rails_9917eeaf5d FOREIGN KEY (user_id) REFERENCES public.users(id);
+
+
+--
 -- Name: accounts fk_rails_b1e30bebc8; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.accounts
-    ADD CONSTRAINT fk_rails_b1e30bebc8 FOREIGN KEY (user_id) REFERENCES public.users(id);
+    ADD CONSTRAINT fk_rails_b1e30bebc8 FOREIGN KEY (customer_id) REFERENCES public.customers(id);
 
 
 --
@@ -341,6 +463,8 @@ ALTER TABLE ONLY public.accounts
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20260617112547'),
+('20260617112149'),
 ('20260617100612'),
 ('20260617100517'),
 ('20260616111910'),
