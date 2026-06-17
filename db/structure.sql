@@ -93,38 +93,6 @@ CREATE TABLE public.ar_internal_metadata (
 
 
 --
--- Name: currencies; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.currencies (
-    id bigint NOT NULL,
-    created_at timestamp(6) without time zone NOT NULL,
-    updated_at timestamp(6) without time zone NOT NULL,
-    currency character varying NOT NULL,
-    CONSTRAINT chk_currencies_currency_3_uppercase_english_letters CHECK (((currency)::text ~ '^[A-Z]{3}$'::text))
-);
-
-
---
--- Name: currencies_id_seq; Type: SEQUENCE; Schema: public; Owner: -
---
-
-CREATE SEQUENCE public.currencies_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: currencies_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
---
-
-ALTER SEQUENCE public.currencies_id_seq OWNED BY public.currencies.id;
-
-
---
 -- Name: customers; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -274,13 +242,6 @@ ALTER TABLE ONLY public.admins ALTER COLUMN id SET DEFAULT nextval('public.admin
 
 
 --
--- Name: currencies id; Type: DEFAULT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.currencies ALTER COLUMN id SET DEFAULT nextval('public.currencies_id_seq'::regclass);
-
-
---
 -- Name: customers id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -330,14 +291,6 @@ ALTER TABLE ONLY public.admins
 
 ALTER TABLE ONLY public.ar_internal_metadata
     ADD CONSTRAINT ar_internal_metadata_pkey PRIMARY KEY (key);
-
-
---
--- Name: currencies currencies_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.currencies
-    ADD CONSTRAINT currencies_pkey PRIMARY KEY (id);
 
 
 --
@@ -395,13 +348,6 @@ CREATE UNIQUE INDEX index_admins_on_user_id ON public.admins USING btree (user_i
 
 
 --
--- Name: index_currencies_on_currency; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE UNIQUE INDEX index_currencies_on_currency ON public.currencies USING btree (currency);
-
-
---
 -- Name: index_customers_on_user_id; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -422,14 +368,6 @@ ALTER TABLE ONLY public.transactions
 
 ALTER TABLE ONLY public.admins
     ADD CONSTRAINT fk_rails_378b9734e4 FOREIGN KEY (user_id) REFERENCES public.users(id);
-
-
---
--- Name: accounts fk_rails_508286b20c; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.accounts
-    ADD CONSTRAINT fk_rails_508286b20c FOREIGN KEY (currency) REFERENCES public.currencies(currency);
 
 
 --
@@ -463,6 +401,7 @@ ALTER TABLE ONLY public.accounts
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20260617144908'),
 ('20260617112547'),
 ('20260617112149'),
 ('20260617100612'),
