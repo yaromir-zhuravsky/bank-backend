@@ -12,7 +12,7 @@ class OperationsController < ApplicationController
   end
   def deposit
     validated_params = validate_params!(OperationsSchema::Deposit)
-    
+
     operation_info = validated_params[:operation]
 
     account = Account.find_by!(number: operation_info[:to])
