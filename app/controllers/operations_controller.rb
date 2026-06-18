@@ -1,66 +1,36 @@
 class OperationsController < ApplicationController
-
-  WithdrawSchema = Dry::Schema.Params do
-    required(:operation).hash do
-      required(:from).filled(:string)
-      required(:amount).filled(:integer, gt?: 0)
-    end
-  end
-
-  DepositSchema = Dry::Schema.Params do
-    required(:operation).hash do
-      required(:to).filled(:string)
-      required(:amount).filled(:integer, gt?: 0)
-    end
-  end
-
-  TransferSchema = Dry::Schema.Params do
-    required(:operation).hash do
-      required(:to).filled(:string)
-      required(:from).filled(:string)
-      required(:amount).filled(:integer, gt?: 0)
-    end
-  end
-
   def withdraw
-    result = WithdrawSchema.call(params.permit!.to_h)
-    return render json: { errors: result.errors.to_h }, status: :unprocessable_entity unless result.success?
+    validated_params = validate_params!(OperationsSchema::Withdraw)
 
-    operation_info = result.to_h[:operation]
-    amount = operation_info[:amount]
+    operation_info = validated_params[:operation]
 
     account = Account.find_by!(number: operation_info[:from])
 
-    Operations::Withdraw.perform(account, amount)
+    OperationsService::Withdraw.perform(account, operation_info[:amount])
 
     head :ok
   end
   def deposit
-    result = DepositSchema.call(params.permit!.to_h)
-    return render json: { errors: result.errors.to_h }, status: :unprocessable_entity unless result.success?
-
-    operation_info = result.to_h[:operation]
-    amount = operation_info[:amount]
+    validated_params = validate_params!(OperationsSchema::Deposit)
+    
+    operation_info = validated_params[:operation]
 
     account = Account.find_by!(number: operation_info[:to])
 
-    Operations::Deposit.perform(account, amount)
+    OperationsService::Deposit.perform(account, operation_info[:amount])
 
     head :ok
   end
 
-
   def transfer
-    result = TransferSchema.call(params.permit!.to_h)
-    return render json: { errors: result.errors.to_h }, status: :unprocessable_entity unless result.success?
+    validated_params = validate_params!(OperationsSchema::Transfer)
 
-    operation_info = result.to_h[:operation]
-    amount = operation_info[:amount]
+    operation_info = validated_params[:operation]
 
     sender_account = Account.find_by!(number: operation_info[:from])
     receiver_account = Account.find_by!(number: operation_info[:to])
 
-    Operations::Transfer.perform(sender_account, receiver_account, amount)
+    OperationsService::Transfer.perform(sender_account, receiver_account, operation_info[:amount])
 
     head :ok
   end
