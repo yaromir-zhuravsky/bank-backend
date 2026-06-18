@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class OperationsController < ApplicationController
   def withdraw
     validated_params = validate_params!(OperationsSchema::Withdraw)
@@ -10,6 +12,7 @@ class OperationsController < ApplicationController
 
     head :ok
   end
+
   def deposit
     validated_params = validate_params!(OperationsSchema::Deposit)
 

@@ -14,7 +14,6 @@ class Account < ApplicationRecord
   validates :balance, presence: true, numericality: { greater_than_or_equal_to: 0 }
   validates :currency, presence: true
 
-
   def add!(amount)
     update!(balance: balance + amount)
   end

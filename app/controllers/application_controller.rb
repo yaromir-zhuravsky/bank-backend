@@ -16,20 +16,21 @@ class ApplicationController < ActionController::API
   rescue_from OperationsService::DifferentCurrencies, with: :different_currencies
 
   private
-  def record_invalid(e)
-    render json: { errors: e.record.errors }, status: :unprocessable_entity
+
+  def record_invalid(error)
+    render json: { errors: error.record.errors }, status: :unprocessable_content
   end
 
-  def record_not_found(e)
-    render json: { errors: "#{e.model.downcase} not found" }, status: :not_found
+  def record_not_found(error)
+    render json: { errors: "#{error.model.downcase} not found" }, status: :not_found
   end
 
-  def params_invalid(e)
-    render json: { errors: e.errors }, status: :unprocessable_entity
+  def params_invalid(error)
+    render json: { errors: error.errors }, status: :unprocessable_content
   end
 
-  def different_currencies(e)
-    render json: { errors: e.errors }, status: :unprocessable_entity
+  def different_currencies(error)
+    render json: { errors: error.errors }, status: :unprocessable_content
   end
 
   def validate_params!(schema)
