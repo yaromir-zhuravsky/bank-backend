@@ -1,4 +1,13 @@
   module OperationsService
+    class DifferentCurrencies < StandardError
+      attr_reader :errors
+
+      def initialize(errors)
+        @errors = errors
+        super()
+      end
+    end
+
     class Withdraw
       def self.perform(account, amount)
         ActiveRecord::Base.transaction do
@@ -21,6 +30,7 @@
 
     class Transfer
       def self.perform(sender_account, receiver_account, amount)
+        raise DifferentCurrencies, "accounts must use the same currency" unless sender_account.currency == receiver_account.currency
         ActiveRecord::Base.transaction do
           operation = Operation.create!
           Transaction.create!(account_id: sender_account.id, operation_id: operation.id, amount: -amount)
