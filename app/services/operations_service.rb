@@ -38,6 +38,9 @@ module OperationsService
       end
 
       ActiveRecord::Base.transaction do
+        [sender_account, receiver_account]
+          .sort_by(&:id)
+          .each(&:lock!)
         operation = Operation.create!
         Transaction.create!(account_id: sender_account.id, operation_id: operation.id, amount: -amount)
         sender_account.deduct!(amount)
