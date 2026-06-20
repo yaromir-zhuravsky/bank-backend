@@ -204,7 +204,9 @@ ALTER SEQUENCE public.transactions_id_seq OWNED BY public.transactions.id;
 CREATE TABLE public.users (
     id bigint CONSTRAINT users_id_not_null1 NOT NULL,
     created_at timestamp(6) without time zone CONSTRAINT users_created_at_not_null1 NOT NULL,
-    updated_at timestamp(6) without time zone CONSTRAINT users_updated_at_not_null1 NOT NULL
+    updated_at timestamp(6) without time zone CONSTRAINT users_updated_at_not_null1 NOT NULL,
+    password_digest character varying NOT NULL,
+    email character varying NOT NULL
 );
 
 
@@ -355,6 +357,13 @@ CREATE UNIQUE INDEX index_customers_on_user_id ON public.customers USING btree (
 
 
 --
+-- Name: index_users_on_email; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_users_on_email ON public.users USING btree (email);
+
+
+--
 -- Name: transactions fk_rails_01f020e267; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -401,6 +410,7 @@ ALTER TABLE ONLY public.accounts
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20260619163228'),
 ('20260617144908'),
 ('20260617112547'),
 ('20260617112149'),
