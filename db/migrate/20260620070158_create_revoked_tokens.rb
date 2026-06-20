@@ -7,5 +7,6 @@ class CreateRevokedTokens < ActiveRecord::Migration[8.1]
       t.datetime :exp, null: false
     end
 
+    add_index :revoked_tokens, :jti, unique: true
   end
 end

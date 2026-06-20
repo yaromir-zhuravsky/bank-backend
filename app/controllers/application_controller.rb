@@ -23,7 +23,7 @@ class ApplicationController < ActionController::API
   def authenticate_request
     access_token = request.headers["Authorization"]&.split(" ")&.[](1)
     if access_token.nil?
-      render :unathorized unless access_token
+      render status: :unauthorized unless access_token
       return
     end
 
@@ -31,7 +31,7 @@ class ApplicationController < ActionController::API
   end
 
   def current_user
-    User.find_by(id: TokensService::Decode.perform(request.headers["Authorization"].split(" ")[1])["user_id"])
+    User.find_by(id: TokensService.decode(request.headers["Authorization"].split(" ")[1])["user_id"])
   end
 
   def record_invalid(error)

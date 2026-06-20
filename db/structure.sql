@@ -404,6 +404,13 @@ CREATE UNIQUE INDEX index_customers_on_user_id ON public.customers USING btree (
 
 
 --
+-- Name: index_revoked_tokens_on_jti; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_revoked_tokens_on_jti ON public.revoked_tokens USING btree (jti);
+
+
+--
 -- Name: index_users_on_email; Type: INDEX; Schema: public; Owner: -
 --
 
