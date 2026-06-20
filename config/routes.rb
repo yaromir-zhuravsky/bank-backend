@@ -14,4 +14,5 @@ Rails.application.routes.draw do
   post "operations/transfer", to: "operations#transfer"
 
   post "auth/login", to: "authentication#login"
+  post "auth/logout", to: "authentication#logout"
 end

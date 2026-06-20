@@ -156,6 +156,38 @@ ALTER SEQUENCE public.operations_id_seq OWNED BY public.operations.id;
 
 
 --
+-- Name: revoked_tokens; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.revoked_tokens (
+    id bigint NOT NULL,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL,
+    jti character varying NOT NULL,
+    exp timestamp(6) without time zone NOT NULL
+);
+
+
+--
+-- Name: revoked_tokens_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.revoked_tokens_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: revoked_tokens_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.revoked_tokens_id_seq OWNED BY public.revoked_tokens.id;
+
+
+--
 -- Name: schema_migrations; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -258,6 +290,13 @@ ALTER TABLE ONLY public.operations ALTER COLUMN id SET DEFAULT nextval('public.o
 
 
 --
+-- Name: revoked_tokens id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.revoked_tokens ALTER COLUMN id SET DEFAULT nextval('public.revoked_tokens_id_seq'::regclass);
+
+
+--
 -- Name: transactions id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -309,6 +348,14 @@ ALTER TABLE ONLY public.customers
 
 ALTER TABLE ONLY public.operations
     ADD CONSTRAINT operations_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: revoked_tokens revoked_tokens_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.revoked_tokens
+    ADD CONSTRAINT revoked_tokens_pkey PRIMARY KEY (id);
 
 
 --
@@ -410,6 +457,7 @@ ALTER TABLE ONLY public.accounts
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20260620070158'),
 ('20260619163228'),
 ('20260617144908'),
 ('20260617112547'),

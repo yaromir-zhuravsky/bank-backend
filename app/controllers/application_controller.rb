@@ -1,7 +1,10 @@
 # frozen_string_literal: true
 
 class ApplicationController < ActionController::API
+  include ActionController::Cookies
+
   class ParamsInvalid < StandardError
+
     attr_reader :errors
 
     def initialize(errors)

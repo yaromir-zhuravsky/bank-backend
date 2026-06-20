@@ -5,7 +5,7 @@ class JwtService
 
   class Encode
     def self.perform(payload, exp)
-      JWT.encode({ **payload, exp: }, JWT_SECRET, "HS256")
+      JWT.encode({ **payload, exp:, jti: SecureRandom.uuid }, JWT_SECRET, "HS256")
     end
   end
 
