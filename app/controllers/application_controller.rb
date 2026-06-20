@@ -3,6 +3,8 @@
 class ApplicationController < ActionController::API
   include ActionController::Cookies
 
+  before_action :authenticate_request
+
   class ParamsInvalid < StandardError
 
     attr_reader :errors
@@ -19,6 +21,21 @@ class ApplicationController < ActionController::API
   rescue_from OperationsService::DifferentCurrencies, with: :different_currencies
 
   private
+
+  def authenticate_request
+    access_token = request.headers["Authorization"]&.split(" ")&.[](1)
+    binding.irb
+    if access_token.nil?
+      render :unathorized unless access_token
+      return
+    end
+    binding.irb
+    TokensService::Decode.perform(access_token)
+  end
+
+  def current_user
+    User.find_by(id: TokensService::Decode.perform(request.headers["Authorization"].split(" ")[1])["user_id"])
+  end
 
   def record_invalid(error)
     render json: { errors: error.record.errors }, status: :unprocessable_content

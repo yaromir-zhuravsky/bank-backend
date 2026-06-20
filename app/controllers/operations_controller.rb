@@ -7,7 +7,8 @@ class OperationsController < ApplicationController
     account = Account.find_by!(number: operation_info[:from])
     OperationsService::Withdraw.perform(account, operation_info[:amount])
 
-    head :ok
+    # head :ok
+    render status: :ok, json: {message: "Hello, #{current_user.customer.firstname}"}
   end
 
   def deposit
