@@ -1,8 +1,6 @@
 # frozen_string_literal: true
 
 class AuthenticationController < ApplicationController
-  skip_before_action :authenticate_request, only: [:login, :refresh]
-
   def login
     validated_params = validate_params!(AuthenticationSchema::Logout)
     authentication_info = validated_params[:authentication]
