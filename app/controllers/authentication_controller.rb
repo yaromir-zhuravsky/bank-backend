@@ -1,6 +1,10 @@
 # frozen_string_literal: true
 
 class AuthenticationController < ApplicationController
+  include Authenticatable
+
+  skip_before_action :authenticate_request, only: %i[login refresh]
+
   def login
     validate_params!(AuthenticationSchema::Login) => { authentication: { email:, password: } }
     user = User.find_by(email:)
@@ -10,20 +14,19 @@ class AuthenticationController < ApplicationController
 
       render status: :ok, json: { access_token:, refresh_token: }
     else
-      render status: :unauthorized
+      head :unauthorized
     end
   end
 
   def logout
     validate_params!(AuthenticationSchema::Logout) => { authentication: { refresh_token: } }
     _authentication_scheme, access_token = request.headers["Authorization"].to_s.split
-
-    if TokensService.valid?(refresh_token) && TokensService.valid?(access_token)
+    if TokensService.valid?(refresh_token)
       TokensService.revoke!(refresh_token)
       TokensService.revoke!(access_token)
       head :ok
     else
-      render status: :unauthorized
+      head :unauthorized
     end
   end
 
@@ -37,7 +40,16 @@ class AuthenticationController < ApplicationController
 
       render status: :ok, json: { access_token:, refresh_token: }
     else
-      render status: :unauthorized
+      head :unauthorized
     end
+  end
+
+  def me
+    render status: :ok, json: {
+      user: {
+        uuid: current_user.uuid,
+        email: current_user.email
+      }
+    }
   end
 end

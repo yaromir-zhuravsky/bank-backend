@@ -11,10 +11,10 @@ module Authenticatable
     _authentication_scheme, access_token = request.headers["Authorization"].to_s.split
     return unless TokensService.valid?(access_token)
 
-    User.find_by(uuid: TokensService.decode!(access_token)["user_uuid"])
+    User.find_by(uuid: TokensService.decode!(access_token).fetch(:user_uuid))
   end
 
   def authenticate_request
-    render status: :unauthorized unless current_user
+    head :unauthorized unless current_user
   end
 end

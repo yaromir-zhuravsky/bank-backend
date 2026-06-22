@@ -16,4 +16,5 @@ Rails.application.routes.draw do
   post "authentication/login", to: "authentication#login"
   post "authentication/logout", to: "authentication#logout"
   post "authentication/refresh", to: "authentication#refresh"
+  get "authentication/me", to: "authentication#me"
 end

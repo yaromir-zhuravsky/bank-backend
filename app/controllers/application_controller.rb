@@ -2,7 +2,6 @@
 
 class ApplicationController < ActionController::API
   include Rescuable
-  include Authenticatable
 
   private
 

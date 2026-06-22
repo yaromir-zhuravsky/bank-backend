@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 class OperationsController < ApplicationController
+  include Authenticatable
+
   def withdraw
     validate_params!(OperationsSchema::Withdraw) => { operation: { from:, amount: } }
     account = Account.find_by!(number: from)
