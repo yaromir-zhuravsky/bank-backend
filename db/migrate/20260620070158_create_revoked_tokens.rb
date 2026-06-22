@@ -3,7 +3,7 @@ class CreateRevokedTokens < ActiveRecord::Migration[8.1]
     create_table :revoked_tokens do |t|
       t.timestamps
 
-      t.string :jti, null: false
+      t.uuid :jti, null: false
       t.datetime :exp, null: false
     end
 
