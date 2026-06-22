@@ -3,6 +3,15 @@
 module Rescuable
   extend ActiveSupport::Concern
 
+  class ParamsInvalid < StandardError
+    attr_reader :errors
+
+    def initialize(errors)
+      @errors = errors
+      super()
+    end
+  end
+
   included do
     rescue_from ActiveRecord::RecordInvalid, with: :record_invalid
     rescue_from ActiveRecord::RecordNotFound, with: :record_not_found

@@ -13,7 +13,7 @@ Rails.application.routes.draw do
   post "operations/deposit", to: "operations#deposit"
   post "operations/transfer", to: "operations#transfer"
 
-  post "auth/login", to: "authentication#login"
-  post "auth/logout", to: "authentication#logout"
-  post "auth/refresh", to: "authentication#refresh"
+  post "authentication/login", to: "authentication#login"
+  post "authentication/logout", to: "authentication#logout"
+  post "authentication/refresh", to: "authentication#refresh"
 end

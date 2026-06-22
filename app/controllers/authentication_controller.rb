@@ -2,44 +2,42 @@
 
 class AuthenticationController < ApplicationController
   def login
-    validated_params = validate_params!(AuthenticationSchema::Logout)
-    authentication_info = validated_params[:authentication]
-    user = User.find_by!(email: authentication_info[:email])
-    if user.authenticate(authentication_info[:password])
-      payload = { user_id: user.id }
-      access_token = TokensService.access_token(payload)
-      refresh_token = TokensService.refresh_token(payload)
+    validate_params!(AuthenticationSchema::Login) => { authentication: { email:, password: } }
+    user = User.find_by(email:)
+    if user&.authenticate(password)
+      payload = { user_uuid: user.uuid }
+      TokensService.tokens(payload) => { access_token:, refresh_token: }
 
       render status: :ok, json: { access_token:, refresh_token: }
+    else
+      render status: :unauthorized
     end
   end
 
   def logout
-    validated_params = validate_params!(AuthenticationSchema::Logout)
-    authentication_info = validated_params[:authentication]
-    refresh_token = authentication_info[:refresh_token]
-    if TokensService.revoked?(refresh_token)
-      render status: :unauthorized
-    else
-      TokensService.revoke!(refresh_token)
-    end
+    validate_params!(AuthenticationSchema::Logout) => { authentication: { refresh_token: } }
+    _authentication_scheme, access_token = request.headers["Authorization"].to_s.split
 
-    head :ok
+    if TokensService.valid?(refresh_token) && TokensService.valid?(access_token)
+      TokensService.revoke!(refresh_token)
+      TokensService.revoke!(access_token)
+      head :ok
+    else
+      render status: :unauthorized
+    end
   end
 
   def refresh
-    validated_params = validate_params!(AuthenticationSchema::Logout)
-    authentication_info = validated_params[:authentication]
-    refresh_token = authentication_info[:refresh_token]
-    if TokensService.revoked?(refresh_token)
-      render status: :unauthorized
-    else
+    validate_params!(AuthenticationSchema::Refresh) => { authentication: { refresh_token: } }
+
+    if TokensService.valid?(refresh_token)
       payload = TokensService.decode!(refresh_token)
-      TokensService.revoke!(authentication_info[:refresh_token])
-      access_token = TokensService.access_token(payload)
-      refresh_token = TokensService.access_token(payload)
+      TokensService.revoke!(refresh_token)
+      TokensService.tokens(payload) => { access_token:, refresh_token: }
 
       render status: :ok, json: { access_token:, refresh_token: }
+    else
+      render status: :unauthorized
     end
   end
 end

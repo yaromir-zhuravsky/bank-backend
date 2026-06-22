@@ -6,5 +6,5 @@ class User < ApplicationRecord
   has_one :customer, dependent: :restrict_with_error
   has_one :admin, dependent: :restrict_with_error
 
-  validates :email, presence: true, uniqueness: true, format: { with: URI::MailTo::EMAIL_REGEXP }
+  validates :email, presence: true, uniqueness: { case_sensitive: false }, format: { with: URI::MailTo::EMAIL_REGEXP }
 end
