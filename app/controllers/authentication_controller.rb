@@ -7,43 +7,29 @@ class AuthenticationController < ApplicationController
 
   def login
     validate_params!(SessionsSchema::Login) => { authentication: { email:, password: } }
+    AuthenticationService.login(email:, password:) => { access_token:, refresh_token: }
 
-    user = User.find_by(email:)
-    if user&.authenticate(password)
-      AuthenticationService.login!(user) => {access_token:, refresh_token:}
-
-      render status: :ok, json: { access_token:, refresh_token: }
-    else
-      head :unauthorized
-    end
+    render status: :ok, json: { access_token:, refresh_token: }
+  rescue AuthenticationService::AuthenticationError
+    head :unauthorized
   end
 
   def logout
     validate_params!(SessionsSchema::Logout) => { authentication: { refresh_token: } }
+    AuthenticationService.logout(refresh_token:)
 
-    if TokensService.valid?(refresh_token) && session.current_refresh_jti == TokensService.decode!(refresh_token).fetch(:jti)
-      session = Session.find_by!(uuid: TokensService.decode!(refresh_token).fetch(:sid))
-      AuthenticationService.logout!(session) if session.revoked_at == nil
-
-      head :ok
-    else
-      head :unauthorized
-    end
+    head :ok
+  rescue AuthenticationService::AuthenticationError
+    head :unauthorized
   end
 
   def refresh
     validate_params!(SessionsSchema::Refresh) => { authentication: { refresh_token: } }
+    AuthenticationService.refresh(refresh_token:) => { access_token:, refresh_token: }
 
-    if TokensService.valid?(refresh_token)
-      session = Session.find_by!(uuid: TokensService.decode!(refresh_token).fetch(:sid))
-      if session.current_refresh_jti == TokensService.decode!(refresh_token).fetch(:jti)
-        AuthenticationService.refresh!(session) => {access_token:, refresh_token:}
-
-        render status: :ok, json: { access_token:, refresh_token: }
-      end
-      else
-      head :unauthorized
-    end
+    render status: :ok, json: { access_token:, refresh_token: }
+  rescue AuthenticationService::AuthenticationError
+    head :unauthorized
   end
 
   def me

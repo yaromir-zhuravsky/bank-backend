@@ -3,32 +3,67 @@
 class AuthenticationService
   ACCESS_TOKEN_TTL = 1.minute
   REFRESH_TOKEN_TTL = 1.hour
-  
-  def self.login!(user)
-    session = Session.new(user:)
-    issue_tokens(session) => { access_token:, refresh_token: }
-    session.update(current_refresh_jti: TokensService.decode!(refresh_token).fetch(:jti),
-                   expires_at: Time.at(TokensService.decode!(refresh_token).fetch(:exp)))
-    session.save!
-    { access_token:, refresh_token: }
+
+  class AuthenticationError < StandardError; end
+  class RefreshTokenError < AuthenticationError; end
+  class InvalidCredentialsError < AuthenticationError; end
+
+  def self.login(email:, password:)
+    user = User.find_by(email:)
+    raise InvalidCredentialsError unless user&.authenticate(password)
+
+    session = Session.create!(
+      user:,
+      expires_at: REFRESH_TOKEN_TTL.from_now,
+      current_refresh_jti: SecureRandom.uuid
+    )
+    generate_tokens(session)
   end
 
-  def self.logout!(session)
-    session.update!(revoked_at: Time.zone.now)
+  def self.logout(refresh_token:)
+    TokensService.decode(refresh_token) => { sid:, jti: }
+    Session.transaction do
+      session = Session.lock.find_by!(uuid: sid)
+      raise RefreshTokenError unless session.active?
+      raise RefreshTokenError unless session.current_refresh_jti == jti
+
+      session.update!(revoked_at: Time.zone.now)
+    end
+  rescue TokensService::DecodeError, ActiveRecord::RecordNotFound
+    raise RefreshTokenError
   end
 
-  def self.refresh!(session)
-    issue_tokens(session) => { access_token:, refresh_token: }
-    session.update!(current_refresh_jti: TokensService.decode!(refresh_token).fetch(:jti))
-    { access_token:, refresh_token: }
+  def self.refresh(refresh_token:)
+    TokensService.decode(refresh_token) => { sid:, jti: }
+    Session.transaction do
+      session = Session.lock.find_by!(uuid: sid)
+      raise RefreshTokenError unless session.active?
+      raise RefreshTokenError unless session.current_refresh_jti == jti
+
+      session.update!(
+        expires_at: REFRESH_TOKEN_TTL.from_now,
+        current_refresh_jti: SecureRandom.uuid
+      )
+      generate_tokens(session)
+    end
+  rescue TokensService::DecodeError, ActiveRecord::RecordNotFound
+    raise RefreshTokenError
   end
 
-  private 
-  
-  def self.issue_tokens(session)
+  def self.generate_tokens(session)
     {
-      access_token: TokensService.issue({ sid: session.uuid }, ttl: ACCESS_TOKEN_TTL),
-      refresh_token: TokensService.issue({ sid: session.uuid }, ttl: REFRESH_TOKEN_TTL)
+      access_token: TokensService.encode(
+        jti: SecureRandom.uuid,
+        exp: ACCESS_TOKEN_TTL.from_now.to_i,
+        sub: session.user.uuid,
+        sid: session.uuid
+      ),
+      refresh_token: TokensService.encode(
+        jti: session.current_refresh_jti,
+        exp: session.expires_at.to_i,
+        sub: session.user.uuid,
+        sid: session.uuid
+      )
     }
   end
 end

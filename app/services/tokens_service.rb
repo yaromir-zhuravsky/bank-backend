@@ -4,15 +4,20 @@ class TokensService
   JWT_SECRET = ENV.fetch("JWT_SECRET")
   ALGORITHM = "HS256"
 
-  def self.encode!(payload)
+  class DecodeError < StandardError; end
+  class EncodeError < StandardError; end
+
+  def self.encode(**payload)
     JWT.encode(
       payload,
       JWT_SECRET,
       ALGORITHM
     )
+  rescue JWT::EncodeError
+    raise EncodeError
   end
 
-  def self.decode!(token)
+  def self.decode(token)
     payload, _headers = JWT.decode(
       token,
       JWT_SECRET,
@@ -22,22 +27,7 @@ class TokensService
     )
 
     payload.deep_symbolize_keys
-  end
-
-  def self.issue(payload, ttl:)
-    encode!(
-      {
-        **payload,
-        exp: ttl.from_now.to_i,
-        jti: SecureRandom.uuid
-      }
-    )
-  end
-
-  def self.valid?(token)
-    decode!(token)
-    true
-  rescue StandardError
-    false
+  rescue JWT::DecodeError
+    raise DecodeError
   end
 end
