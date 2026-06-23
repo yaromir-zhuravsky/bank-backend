@@ -3,8 +3,6 @@
 class TokensService
   JWT_SECRET = ENV.fetch("JWT_SECRET")
   ALGORITHM = "HS256"
-  ACCESS_TOKEN_TTL = 1.minute
-  REFRESH_TOKEN_TTL = 1.hour
 
   def self.encode!(payload)
     JWT.encode(
@@ -26,31 +24,19 @@ class TokensService
     payload.deep_symbolize_keys
   end
 
-  def self.token(user_payload = {}, ttl:)
+  def self.issue(payload, ttl:)
     encode!(
       {
-        **user_payload,
+        **payload,
         exp: ttl.from_now.to_i,
         jti: SecureRandom.uuid
       }
     )
   end
 
-  def self.tokens(user_payload = {})
-    {
-      access_token: token(user_payload, ttl: ACCESS_TOKEN_TTL),
-      refresh_token: token(user_payload, ttl: REFRESH_TOKEN_TTL)
-    }
-  end
-
-  def self.revoke!(token)
-    payload = decode!(token)
-    RevokedToken.create!(jti: payload[:jti], exp: Time.zone.at(payload[:exp]))
-  end
-
   def self.valid?(token)
-    decode!(token) => { jti: }
-    !RevokedToken.exists?(jti:)
+    decode!(token)
+    true
   rescue StandardError
     false
   end

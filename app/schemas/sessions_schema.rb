@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-module AuthenticationSchema
+module SessionsSchema
   Login = Dry::Schema.Params do
     required(:authentication).hash do
       required(:email).filled(:string)

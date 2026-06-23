@@ -3,14 +3,14 @@
 class AuthenticationController < ApplicationController
   include Authenticatable
 
-  skip_before_action :authenticate_request, only: %i[login refresh]
+  before_action :authenticate_request, only: %i[logout me]
 
   def login
-    validate_params!(AuthenticationSchema::Login) => { authentication: { email:, password: } }
+    validate_params!(SessionsSchema::Login) => { authentication: { email:, password: } }
+
     user = User.find_by(email:)
     if user&.authenticate(password)
-      payload = { user_uuid: user.uuid }
-      TokensService.tokens(payload) => { access_token:, refresh_token: }
+      AuthenticationService.login!(user) => {access_token:, refresh_token:}
 
       render status: :ok, json: { access_token:, refresh_token: }
     else
@@ -19,11 +19,12 @@ class AuthenticationController < ApplicationController
   end
 
   def logout
-    validate_params!(AuthenticationSchema::Logout) => { authentication: { refresh_token: } }
-    _authentication_scheme, access_token = request.headers["Authorization"].to_s.split
-    if TokensService.valid?(refresh_token)
-      TokensService.revoke!(refresh_token)
-      TokensService.revoke!(access_token)
+    validate_params!(SessionsSchema::Logout) => { authentication: { refresh_token: } }
+
+    if TokensService.valid?(refresh_token) && session.current_refresh_jti == TokensService.decode!(refresh_token).fetch(:jti)
+      session = Session.find_by!(uuid: TokensService.decode!(refresh_token).fetch(:sid))
+      AuthenticationService.logout!(session) if session.revoked_at == nil
+
       head :ok
     else
       head :unauthorized
@@ -31,15 +32,16 @@ class AuthenticationController < ApplicationController
   end
 
   def refresh
-    validate_params!(AuthenticationSchema::Refresh) => { authentication: { refresh_token: } }
+    validate_params!(SessionsSchema::Refresh) => { authentication: { refresh_token: } }
 
     if TokensService.valid?(refresh_token)
-      payload = TokensService.decode!(refresh_token)
-      TokensService.revoke!(refresh_token)
-      TokensService.tokens(payload) => { access_token:, refresh_token: }
+      session = Session.find_by!(uuid: TokensService.decode!(refresh_token).fetch(:sid))
+      if session.current_refresh_jti == TokensService.decode!(refresh_token).fetch(:jti)
+        AuthenticationService.refresh!(session) => {access_token:, refresh_token:}
 
-      render status: :ok, json: { access_token:, refresh_token: }
-    else
+        render status: :ok, json: { access_token:, refresh_token: }
+      end
+      else
       head :unauthorized
     end
   end

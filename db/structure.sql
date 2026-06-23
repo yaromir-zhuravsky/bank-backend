@@ -184,23 +184,35 @@ ALTER SEQUENCE public.operations_id_seq OWNED BY public.operations.id;
 
 
 --
--- Name: revoked_tokens; Type: TABLE; Schema: public; Owner: -
+-- Name: schema_migrations; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE public.revoked_tokens (
-    id bigint NOT NULL,
-    created_at timestamp(6) without time zone NOT NULL,
-    updated_at timestamp(6) without time zone NOT NULL,
-    jti uuid NOT NULL,
-    exp timestamp(6) without time zone NOT NULL
+CREATE TABLE public.schema_migrations (
+    version character varying NOT NULL
 );
 
 
 --
--- Name: revoked_tokens_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+-- Name: sessions; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE SEQUENCE public.revoked_tokens_id_seq
+CREATE TABLE public.sessions (
+    id bigint NOT NULL,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL,
+    user_id bigint NOT NULL,
+    uuid uuid NOT NULL,
+    current_refresh_jti character varying NOT NULL,
+    expires_at timestamp(6) without time zone NOT NULL,
+    revoked_at timestamp(6) without time zone
+);
+
+
+--
+-- Name: sessions_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.sessions_id_seq
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -209,19 +221,10 @@ CREATE SEQUENCE public.revoked_tokens_id_seq
 
 
 --
--- Name: revoked_tokens_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+-- Name: sessions_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
-ALTER SEQUENCE public.revoked_tokens_id_seq OWNED BY public.revoked_tokens.id;
-
-
---
--- Name: schema_migrations; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.schema_migrations (
-    version character varying NOT NULL
-);
+ALTER SEQUENCE public.sessions_id_seq OWNED BY public.sessions.id;
 
 
 --
@@ -267,7 +270,7 @@ CREATE TABLE public.users (
     updated_at timestamp(6) without time zone CONSTRAINT users_updated_at_not_null1 NOT NULL,
     password_digest character varying NOT NULL,
     email public.citext NOT NULL,
-    uuid uuid DEFAULT gen_random_uuid() NOT NULL
+    uuid uuid NOT NULL
 );
 
 
@@ -319,10 +322,10 @@ ALTER TABLE ONLY public.operations ALTER COLUMN id SET DEFAULT nextval('public.o
 
 
 --
--- Name: revoked_tokens id; Type: DEFAULT; Schema: public; Owner: -
+-- Name: sessions id; Type: DEFAULT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.revoked_tokens ALTER COLUMN id SET DEFAULT nextval('public.revoked_tokens_id_seq'::regclass);
+ALTER TABLE ONLY public.sessions ALTER COLUMN id SET DEFAULT nextval('public.sessions_id_seq'::regclass);
 
 
 --
@@ -380,19 +383,19 @@ ALTER TABLE ONLY public.operations
 
 
 --
--- Name: revoked_tokens revoked_tokens_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.revoked_tokens
-    ADD CONSTRAINT revoked_tokens_pkey PRIMARY KEY (id);
-
-
---
 -- Name: schema_migrations schema_migrations_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.schema_migrations
     ADD CONSTRAINT schema_migrations_pkey PRIMARY KEY (version);
+
+
+--
+-- Name: sessions sessions_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.sessions
+    ADD CONSTRAINT sessions_pkey PRIMARY KEY (id);
 
 
 --
@@ -433,10 +436,17 @@ CREATE UNIQUE INDEX index_customers_on_user_id ON public.customers USING btree (
 
 
 --
--- Name: index_revoked_tokens_on_jti; Type: INDEX; Schema: public; Owner: -
+-- Name: index_sessions_on_current_refresh_jti; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE UNIQUE INDEX index_revoked_tokens_on_jti ON public.revoked_tokens USING btree (jti);
+CREATE UNIQUE INDEX index_sessions_on_current_refresh_jti ON public.sessions USING btree (current_refresh_jti);
+
+
+--
+-- Name: index_sessions_on_uuid; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_sessions_on_uuid ON public.sessions USING btree (uuid);
 
 
 --
@@ -470,6 +480,14 @@ ALTER TABLE ONLY public.admins
 
 
 --
+-- Name: sessions fk_rails_758836b4f0; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.sessions
+    ADD CONSTRAINT fk_rails_758836b4f0 FOREIGN KEY (user_id) REFERENCES public.users(id);
+
+
+--
 -- Name: transactions fk_rails_8512b362e5; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -500,6 +518,8 @@ ALTER TABLE ONLY public.accounts
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20260623103349'),
+('20260622165556'),
 ('20260620070158'),
 ('20260619163228'),
 ('20260617144908'),

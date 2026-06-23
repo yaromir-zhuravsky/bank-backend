@@ -8,8 +8,6 @@ class AddPasswordDigestAndEmailAndUuidToUsers < ActiveRecord::Migration[8.1]
     add_column :users, :email, :citext, null: false
     add_column :users, :uuid, :uuid, null: false
 
-    change_column_default :users, :uuid, "gen_random_uuid()"
-
     add_index :users, :email, unique: true, algorithm: :concurrently
     add_index :users, :uuid, unique: true, algorithm: :concurrently
   end

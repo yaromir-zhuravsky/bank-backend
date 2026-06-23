@@ -3,15 +3,14 @@
 module Authenticatable
   extend ActiveSupport::Concern
 
-  included do
-    before_action :authenticate_request
-  end
-
   def current_user
     _authentication_scheme, access_token = request.headers["Authorization"].to_s.split
     return unless TokensService.valid?(access_token)
 
-    User.find_by(uuid: TokensService.decode!(access_token).fetch(:user_uuid))
+
+
+    session = Session.find_by(uuid: TokensService.decode!(access_token).fetch(:sid))
+    session.user if session.revoked_at == nil
   end
 
   def authenticate_request
