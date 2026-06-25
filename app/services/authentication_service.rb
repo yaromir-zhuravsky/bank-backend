@@ -10,7 +10,8 @@ class AuthenticationService
 
   def self.login(email:, password:)
     user = User.find_by(email:)
-    raise InvalidCredentialsError unless user&.authenticate(password)
+    raise InvalidCredentialsError if user.nil?
+    raise InvalidCredentialsError unless user.authenticate(password)
 
     session = Session.create!(
       user:,

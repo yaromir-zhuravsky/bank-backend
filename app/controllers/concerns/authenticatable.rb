@@ -4,16 +4,15 @@ module Authenticatable
   extend ActiveSupport::Concern
 
   def current_user
-    TokensService.decode(access_token) => { sub: }
-    User.find_by!(uuid: sub)
+    @current_session.user
   end
 
   def authenticate_request
     TokensService.decode(access_token) => { sid: }
-    session = Session.find_by!(uuid: sid)
+    @current_session = Session.find_by!(uuid: sid)
 
-    head :unauthorized unless session.active?
-  rescue TokensService::DecodeError
+    head :unauthorized unless @current_session.active?
+  rescue TokensService::DecodeError, ActiveRecord::RecordNotFound
     head :unauthorized
   end
 
