@@ -30,3 +30,4 @@ group :development, :test do
   gem "dotenv", "~> 3.2"
 end
 
+gem "kamal", "~> 2.12"
