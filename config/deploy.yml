@@ -1,4 +1,4 @@
-service: bank
+service: bank-backend
 
 image: <%= ENV.fetch("KAMAL_IMAGE") %>
 
