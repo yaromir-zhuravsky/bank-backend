@@ -1,6 +1,6 @@
 FROM ruby:3.4.4-alpine
 
-WORKDIR /bank
+WORKDIR /bank-backend
 
 RUN apk add --no-cache \
       build-base \
