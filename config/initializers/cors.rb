@@ -2,7 +2,7 @@
 
 allowed_origins =
   if Rails.env.production?
-    %w[https://app.example.com]
+    %w[https://app.zhuravsky.dev]
   else
     %w[http://localhost:3000 http://127.0.0.1:3000]
   end
